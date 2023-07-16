@@ -15,6 +15,7 @@ import { gql } from "@apollo/client";
 import CreatePost from "./createPost";
 import CreateAuthor from "./createAuthor";
 import Image from "next/image";
+import { purple } from "@mui/material/colors";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ const SuperCard = ({ _id, title, content, author, imageUrl }: BlogType) => {
           </Typography>
         </Link>
         <Typography variant="body2">{content}</Typography>
-        <Typography variant="body2" color="#252540">
+        <Typography variant="body2" color={purple[600]}>
           {author?.name}
         </Typography>
       </CardContent>
@@ -114,7 +115,7 @@ export default async function Home() {
         <Grid container spacing={3}>
           {data.posts.length > 0 ? (
             data.posts.map((blog, index) => (
-              <Grid xs={4} key={index}>
+              <Grid xs={12} md={4} lg={3} key={index}>
                 <SuperCard
                   _id={blog._id}
                   title={blog.title}

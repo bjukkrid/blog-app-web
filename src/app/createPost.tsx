@@ -47,10 +47,10 @@ const CREATE_POST = gql`
       _id
       title
       content
+      imageUrl
       author {
         _id
       }
-      imageUrl
     }
   }
 `;
@@ -153,7 +153,14 @@ export default function CreatePost({}: Props) {
                   ))}
                 </Select>
               </FormControl>
-              <TextField type="text" label="imageUrl" fullWidth />
+              <TextField
+                type="text"
+                label="imageUrl"
+                fullWidth
+                onChange={(e) => {
+                  setForm({ ...form, imageUrl: e.target.value });
+                }}
+              />
               <Button variant="contained" type="submit">
                 Submit
               </Button>
