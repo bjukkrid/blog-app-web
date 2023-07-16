@@ -1,95 +1,136 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+import React from "react";
+import {
+  Container,
+  Stack,
+  Typography,
+  Paper,
+  Card,
+  CardMedia,
+  CardContent,
+} from "@mui/material";
+import Grid from "@mui/material/Unstable_Grid2";
+import Link from "next/link";
+import { getClient } from "../lib/client";
+import { gql } from "@apollo/client";
+import CreatePost from "./createPost";
+import CreateAuthor from "./createAuthor";
+import Image from "next/image";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+interface Response {
+  posts: {
+    _id: string;
+    title: string;
+    content: string;
+    author: Author;
+    imageUrl: string;
+  }[];
+}
+
+type Author = {
+  id?: string;
+  name?: string;
+};
+
+type BlogType = {
+  _id: string;
+  title: string;
+  content: string;
+  author?: Author;
+  imageUrl?: string;
+};
+
+const SuperCard = ({ _id, title, content, author, imageUrl }: BlogType) => {
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <Card sx={{ maxWidth: 345 }}>
+      {/* <Image src={imageUrl} width={500} height={500} alt={imageUrl} /> */}
+      <CardContent>
+        <Link href={`/post/${_id}`}>
+          <Typography gutterBottom variant="h5" component="div">
+            {title}
+          </Typography>
+        </Link>
+        <Typography variant="body2">{content}</Typography>
+        <Typography variant="body2" color="#252540">
+          {author?.name}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+};
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+export default async function Home() {
+  const client = getClient();
+  const query = gql`
+    query QueryPosts {
+      posts {
+        _id
+        title
+        content
+        imageUrl
+        author {
+          _id
+          name
+        }
+      }
+    }
+  `;
+  const { data } = await client.query<Response>({
+    query,
+    context: {
+      fetchOptions: {
+        next: { revalidate: 5 },
+      },
+    },
+  });
+  console.log("data >", data);
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
+  return (
+    <div>
+      <Container>
+        <Stack
+          spacing={2}
+          sx={{
+            m: 3,
+          }}
         >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
+          <Typography variant="h5" textAlign="center">
+            BLOG APP
+          </Typography>
+        </Stack>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Stack
+          direction="row-reverse"
+          spacing={2}
+          sx={{
+            margin: 2,
+          }}
         >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
+          <CreateAuthor />
+          <CreatePost />
+        </Stack>
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+        <Grid container spacing={3}>
+          {data.posts.length > 0 ? (
+            data.posts.map((blog, index) => (
+              <Grid xs={4} key={index}>
+                <SuperCard
+                  _id={blog._id}
+                  title={blog.title}
+                  content={blog.content}
+                  author={blog.author}
+                  imageUrl={blog.imageUrl}
+                />
+              </Grid>
+            ))
+          ) : (
+            <Typography variant="h5" textAlign="center">
+              No posts
+            </Typography>
+          )}
+        </Grid>
+      </Container>
+    </div>
+  );
 }
